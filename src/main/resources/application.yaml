@@ -1,0 +1,13 @@
+spring:
+  profiles:
+    active: local
+  application:
+    name: order-management
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
+  jpa:
+    open-in-view: false
+
+server:
+  port: 8081
