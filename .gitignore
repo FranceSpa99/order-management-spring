@@ -38,3 +38,6 @@ build/
 ### Claude ###
 CLAUDE.md
 order-management-system-plan.md
+# macOS
+.DS_Store
+**/.DS_Store

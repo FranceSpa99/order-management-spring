@@ -3,6 +3,8 @@ spring:
     url: jdbc:postgresql://localhost:5432/orderdb
     password: ${DB_PASSWORD:postgres}
     username: ${DB_USERNAME:postgres}
+  flyway:
+    locations: classpath:db/migration
   jpa:
     hibernate:
       ddl-auto: validate

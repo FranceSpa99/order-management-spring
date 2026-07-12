@@ -1,0 +1,2 @@
+-- Initial schema placeholder
+-- Tables will be added in V2 (Sprint 1)
