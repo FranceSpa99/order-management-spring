@@ -36,6 +36,7 @@ public class OrderService {
 
     @Transactional
     public OrderResponse createOrder(CreateOrderRequest request) {
+        log.info("Creating order for customerId={}", request.customerId());
 
         Order order = new Order();
         order.setCustomerId(request.customerId());
@@ -48,6 +49,8 @@ public class OrderService {
                     .orElseThrow(() -> new EntityNotFoundException("Product not found: " + itemReq.productId()));
 
             if (product.getStockQuantity() < itemReq.quantity()) {
+                log.warn("Insufficient stock for productId={}, requested={}, available={}",
+                        product.getId(), itemReq.quantity(), product.getStockQuantity());
                 throw new InsufficientStockException("Insufficient stock for: " + product.getId());
             }
             product.setStockQuantity(product.getStockQuantity() - itemReq.quantity());
@@ -67,32 +70,34 @@ public class OrderService {
 
         order.setTotalAmount(total);
         Order saved = orderRepository.save(order);
+        log.info("Order created id={} customerId={} total={}", saved.getId(), saved.getCustomerId(), saved.getTotalAmount());
         return toResponse(saved);
     }
 
     @Transactional(readOnly = true)
     public OrderResponse getOrder(UUID id) {
-
+        log.debug("Fetching order id={}", id);
         Order order = orderRepository.findWithItemsById(id)
                 .orElseThrow(() -> new OrderNotFoundException("Order not found: " + id));
 
         return toResponse(order);
-
     }
 
     @Transactional(readOnly = true)
-    public Page<OrderResponse> getOrders(Pageable pageable){
+    public Page<OrderResponse> getOrders(Pageable pageable) {
+        log.debug("Fetching orders page={} size={}", pageable.getPageNumber(), pageable.getPageSize());
         return orderRepository.findAll(pageable)
                 .map(this::toResponse);
     }
 
     @Transactional
     public OrderResponse updateOrderStatus(UUID id, UpdateOrderStatusRequest request) {
-
+        log.info("Updating order id={} to status={}", id, request.status());
         Order order = orderRepository.findById(id)
                 .orElseThrow(() -> new OrderNotFoundException("Order not found: " + id));
 
-        if(!order.getStatus().canTransitionTo(request.status())) {
+        if (!order.getStatus().canTransitionTo(request.status())) {
+            log.warn("Invalid status transition for order id={}: {} -> {}", id, order.getStatus(), request.status());
             throw new InvalidStateTransitionException(
                     "Cannot transition from " + order.getStatus() + " to " + request.status()
             );
@@ -104,20 +109,22 @@ public class OrderService {
 
     @Transactional
     public void cancelOrder(UUID id) {
-
+        log.info("Cancelling order id={}", id);
         Order order = orderRepository.findWithItemsById(id)
                 .orElseThrow(() -> new OrderNotFoundException("Order not found: " + id));
 
-        if(!order.getStatus().canTransitionTo(OrderStatus.CANCELLED)){
+        if (!order.getStatus().canTransitionTo(OrderStatus.CANCELLED)) {
+            log.warn("Cannot cancel order id={} in status={}", id, order.getStatus());
             throw new InvalidStateTransitionException("Cannot cancel order in status " + order.getStatus());
         }
 
-        for(OrderItem item : order.getOrderItems()){
+        for (OrderItem item : order.getOrderItems()) {
             Product product = item.getProduct();
             product.setStockQuantity(product.getStockQuantity() + item.getQuantity());
         }
 
         order.setStatus(OrderStatus.CANCELLED);
+        log.info("Order id={} cancelled, stock restored for {} items", id, order.getOrderItems().size());
     }
 
     private OrderResponse toResponse(Order order) {
