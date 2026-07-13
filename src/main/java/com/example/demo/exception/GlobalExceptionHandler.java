@@ -4,6 +4,7 @@ import com.example.demo.dto.response.ErrorResponse;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -21,6 +22,13 @@ public class GlobalExceptionHandler {
     public ErrorResponse handleNotFound(RuntimeException ex) {
         log.warn("Resource not found: {}", ex.getMessage());
         return ErrorResponse.of(HttpStatus.NOT_FOUND.value(), ex.getMessage());
+    }
+
+    @ExceptionHandler(AccessDeniedException.class)
+    @ResponseStatus(HttpStatus.FORBIDDEN)
+    public ErrorResponse handleForbidden(AccessDeniedException ex) {
+        log.warn("Access denied: {}", ex.getMessage());
+        return ErrorResponse.of(HttpStatus.FORBIDDEN.value(), "Access denied");
     }
 
     @ExceptionHandler({InsufficientStockException.class, InvalidStateTransitionException.class})

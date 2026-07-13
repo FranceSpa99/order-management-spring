@@ -8,3 +8,9 @@ spring:
   jpa:
     hibernate:
       ddl-auto: validate
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://localhost:8080/realms/order-management
+          jwk-set-uri: http://localhost:8080/realms/order-management/protocol/openid-connect/certs

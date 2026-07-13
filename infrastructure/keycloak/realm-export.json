@@ -75,6 +75,22 @@
       "clientRole" : false,
       "containerId" : "501bcae1-410e-4d53-9ab0-acb9b8ecf28c",
       "attributes" : { }
+    }, {
+      "id" : "8cbf81b8-4b02-44e5-92bc-0ecdb3b37cf2",
+      "name" : "ROLE_CUSTOMER",
+      "description" : "",
+      "composite" : false,
+      "clientRole" : false,
+      "containerId" : "501bcae1-410e-4d53-9ab0-acb9b8ecf28c",
+      "attributes" : { }
+    }, {
+      "id" : "19d912af-6435-41cf-b980-919a540022b3",
+      "name" : "ROLE_ADMIN",
+      "description" : "",
+      "composite" : false,
+      "clientRole" : false,
+      "containerId" : "501bcae1-410e-4d53-9ab0-acb9b8ecf28c",
+      "attributes" : { }
     } ],
     "client" : {
       "realm-management" : [ {
@@ -392,6 +408,51 @@
   "webAuthnPolicyPasswordlessAvoidSameAuthenticatorRegister" : false,
   "webAuthnPolicyPasswordlessAcceptableAaguids" : [ ],
   "webAuthnPolicyPasswordlessExtraOrigins" : [ ],
+  "users" : [ {
+    "id" : "bbb3161e-58f6-4ce6-af1e-44fa922d3b15",
+    "username" : "admin",
+    "firstName" : "Admin",
+    "lastName" : "User",
+    "email" : "admin@test.com",
+    "emailVerified" : true,
+    "createdTimestamp" : 1783872397694,
+    "enabled" : true,
+    "totp" : false,
+    "credentials" : [ {
+      "id" : "242a8291-7151-4f55-84db-a098d96f3565",
+      "type" : "password",
+      "createdDate" : 1783873519506,
+      "secretData" : "{\"value\":\"JYioJgpmc3ypFgbHg5LVWw/notWD3dJadzZr+5LX3HGDBKNQS/4FC6BgQIe9cmS0ZLjO1I4ll5DagwQk91Ks1A==\",\"salt\":\"bQXsMORe564lWwVWy9OwGw==\",\"additionalParameters\":{}}",
+      "credentialData" : "{\"hashIterations\":210000,\"algorithm\":\"pbkdf2-sha512\",\"additionalParameters\":{}}"
+    } ],
+    "disableableCredentialTypes" : [ ],
+    "requiredActions" : [ ],
+    "realmRoles" : [ "default-roles-order-management", "ROLE_ADMIN" ],
+    "notBefore" : 0,
+    "groups" : [ ]
+  }, {
+    "id" : "abeb4466-ff06-4e40-ac9b-bf61b38ac3d2",
+    "username" : "customer",
+    "firstName" : "Customer",
+    "lastName" : "User",
+    "email" : "customer@test.com",
+    "emailVerified" : true,
+    "createdTimestamp" : 1783872428380,
+    "enabled" : true,
+    "totp" : false,
+    "credentials" : [ {
+      "id" : "2b2db01e-7e5e-43de-9072-acfcb8b79fd4",
+      "type" : "password",
+      "createdDate" : 1783873519638,
+      "secretData" : "{\"value\":\"EnkBN6sXIhBjZcZ8/hS7FLxwaCm5+C+Hg2qiF/e4PMGmSDY/YqnwpWaJWuN4ShZUUdryqELzKA8KKu+S/zaZeQ==\",\"salt\":\"UK6Afz66YsG35qcAdFg2gg==\",\"additionalParameters\":{}}",
+      "credentialData" : "{\"hashIterations\":210000,\"algorithm\":\"pbkdf2-sha512\",\"additionalParameters\":{}}"
+    } ],
+    "disableableCredentialTypes" : [ ],
+    "requiredActions" : [ ],
+    "realmRoles" : [ "default-roles-order-management" ],
+    "notBefore" : 0,
+    "groups" : [ ]
+  } ],
   "scopeMappings" : [ {
     "clientScope" : "offline_access",
     "roles" : [ "offline_access" ]

@@ -19,6 +19,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -35,11 +38,11 @@ public class OrderService {
     private final ProductRepository productRepository;
 
     @Transactional
-    public OrderResponse createOrder(CreateOrderRequest request) {
-        log.info("Creating order for customerId={}", request.customerId());
+    public OrderResponse createOrder(CreateOrderRequest request, UUID customerId) {
+        log.info("Creating order for customerId={}", customerId);
 
         Order order = new Order();
-        order.setCustomerId(request.customerId());
+        order.setCustomerId(customerId);
         order.setStatus(OrderStatus.CREATED);
 
         BigDecimal total = BigDecimal.ZERO;
@@ -93,18 +96,33 @@ public class OrderService {
     @Transactional
     public OrderResponse updateOrderStatus(UUID id, UpdateOrderStatusRequest request) {
         log.info("Updating order id={} to status={}", id, request.status());
+
+        OrderStatus targetStatus = request.status();
+        if (targetStatus == OrderStatus.SHIPPED || targetStatus == OrderStatus.DELIVERED) {
+            if (!isAdmin()) {
+                log.warn("Non-admin attempted to set order id={} to status={}", id, targetStatus);
+                throw new AccessDeniedException("Only admins can set status " + targetStatus);
+            }
+        }
+
         Order order = orderRepository.findById(id)
                 .orElseThrow(() -> new OrderNotFoundException("Order not found: " + id));
 
-        if (!order.getStatus().canTransitionTo(request.status())) {
-            log.warn("Invalid status transition for order id={}: {} -> {}", id, order.getStatus(), request.status());
+        if (!order.getStatus().canTransitionTo(targetStatus)) {
+            log.warn("Invalid status transition for order id={}: {} -> {}", id, order.getStatus(), targetStatus);
             throw new InvalidStateTransitionException(
-                    "Cannot transition from " + order.getStatus() + " to " + request.status()
+                    "Cannot transition from " + order.getStatus() + " to " + targetStatus
             );
         }
-        order.setStatus(request.status());
+        order.setStatus(targetStatus);
 
         return toResponse(order);
+    }
+
+    private boolean isAdmin() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        return auth != null && auth.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
     }
 
     @Transactional

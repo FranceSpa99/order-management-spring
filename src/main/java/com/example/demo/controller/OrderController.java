@@ -9,6 +9,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
@@ -22,8 +24,10 @@ public class OrderController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public OrderResponse createOrder(@Valid @RequestBody CreateOrderRequest request) {
-        return orderService.createOrder(request);
+    public OrderResponse createOrder(@Valid @RequestBody CreateOrderRequest request,
+                                     @AuthenticationPrincipal Jwt jwt) {
+        UUID customerId = UUID.fromString(jwt.getSubject());
+        return orderService.createOrder(request, customerId);
     }
 
     @GetMapping("/{id}")
