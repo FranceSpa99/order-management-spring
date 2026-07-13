@@ -197,12 +197,12 @@ public class OrderService {
 
         OrderCreatedEvent eventToSend = new OrderCreatedEvent(
                 UUID.randomUUID(),
+                "1.0",
                 saved.getId(),
                 saved.getCustomerId(),
                 saved.getTotalAmount(),
                 Instant.now(),
                 items
-
         );
 
         orderEventPublisher.publishOrderCreated(eventToSend);
@@ -213,11 +213,11 @@ public class OrderService {
 
         OrderStatusChangedEvent eventToSend = new OrderStatusChangedEvent(
                 UUID.randomUUID(),
+                "1.0",
                 order.getId(),
                 previousStatus,
                 order.getStatus(),
                 Instant.now()
-
         );
 
         orderEventPublisher.publishStatusChanged(eventToSend);

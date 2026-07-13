@@ -8,11 +8,11 @@ import java.util.UUID;
 
 public record OrderCreatedEvent(
         UUID eventId,
+        String version,
         UUID orderId,
         UUID customerId,
         BigDecimal totalAmount,
         Instant timestamp,
         List<OrderItemEvent> items
-
 ) {
 }
