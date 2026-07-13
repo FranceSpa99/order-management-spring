@@ -9,6 +9,10 @@ import com.example.demo.dto.request.OrderItemRequest;
 import com.example.demo.dto.request.UpdateOrderStatusRequest;
 import com.example.demo.dto.response.OrderItemResponse;
 import com.example.demo.dto.response.OrderResponse;
+import com.example.demo.event.OrderCreatedEvent;
+import com.example.demo.event.OrderEventPublisher;
+import com.example.demo.event.OrderItemEvent;
+import com.example.demo.event.OrderStatusChangedEvent;
 import com.example.demo.exception.InsufficientStockException;
 import com.example.demo.exception.InvalidStateTransitionException;
 import com.example.demo.exception.OrderNotFoundException;
@@ -26,6 +30,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
@@ -36,6 +41,7 @@ public class OrderService {
 
     private final OrderRepository orderRepository;
     private final ProductRepository productRepository;
+    private final OrderEventPublisher orderEventPublisher;
 
     @Transactional
     public OrderResponse createOrder(CreateOrderRequest request, UUID customerId) {
@@ -73,6 +79,9 @@ public class OrderService {
 
         order.setTotalAmount(total);
         Order saved = orderRepository.save(order);
+
+        publishOrderCreatedEventOnKafka(saved);
+
         log.info("Order created id={} customerId={} total={}", saved.getId(), saved.getCustomerId(), saved.getTotalAmount());
         return toResponse(saved);
     }
@@ -108,6 +117,8 @@ public class OrderService {
         Order order = orderRepository.findById(id)
                 .orElseThrow(() -> new OrderNotFoundException("Order not found: " + id));
 
+        OrderStatus previousStatus = order.getStatus();
+
         if (!order.getStatus().canTransitionTo(targetStatus)) {
             log.warn("Invalid status transition for order id={}: {} -> {}", id, order.getStatus(), targetStatus);
             throw new InvalidStateTransitionException(
@@ -115,6 +126,8 @@ public class OrderService {
             );
         }
         order.setStatus(targetStatus);
+
+        publishStatusChangedEventOnKafka(order, previousStatus);
 
         return toResponse(order);
     }
@@ -131,6 +144,8 @@ public class OrderService {
         Order order = orderRepository.findWithItemsById(id)
                 .orElseThrow(() -> new OrderNotFoundException("Order not found: " + id));
 
+        OrderStatus previousStatus = order.getStatus();
+
         if (!order.getStatus().canTransitionTo(OrderStatus.CANCELLED)) {
             log.warn("Cannot cancel order id={} in status={}", id, order.getStatus());
             throw new InvalidStateTransitionException("Cannot cancel order in status " + order.getStatus());
@@ -143,6 +158,8 @@ public class OrderService {
 
         order.setStatus(OrderStatus.CANCELLED);
         log.info("Order id={} cancelled, stock restored for {} items", id, order.getOrderItems().size());
+
+        publishStatusChangedEventOnKafka(order, previousStatus);
     }
 
     private OrderResponse toResponse(Order order) {
@@ -164,5 +181,45 @@ public class OrderService {
                 order.getCreatedAt(),
                 items
         );
+    }
+
+
+    private void publishOrderCreatedEventOnKafka(Order saved) {
+
+        List<OrderItemEvent> items = saved.getOrderItems().stream()
+                .map(item -> new OrderItemEvent(
+                        item.getProduct().getId(),
+                        item.getQuantity(),
+                        item.getUnitPrice(),
+                        item.getSubtotal()
+                ))
+                .toList();
+
+        OrderCreatedEvent eventToSend = new OrderCreatedEvent(
+                UUID.randomUUID(),
+                saved.getId(),
+                saved.getCustomerId(),
+                saved.getTotalAmount(),
+                Instant.now(),
+                items
+
+        );
+
+        orderEventPublisher.publishOrderCreated(eventToSend);
+    }
+
+
+    private void publishStatusChangedEventOnKafka(Order order, OrderStatus previousStatus) {
+
+        OrderStatusChangedEvent eventToSend = new OrderStatusChangedEvent(
+                UUID.randomUUID(),
+                order.getId(),
+                previousStatus,
+                order.getStatus(),
+                Instant.now()
+
+        );
+
+        orderEventPublisher.publishStatusChanged(eventToSend);
     }
 }

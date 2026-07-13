@@ -14,3 +14,21 @@ spring:
         jwt:
           issuer-uri: http://localhost:8080/realms/order-management
           jwk-set-uri: http://localhost:8080/realms/order-management/protocol/openid-connect/certs
+  kafka:
+    bootstrap-servers: localhost:9092
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+
+
+app:
+  kafka:
+    topics:
+      order-created:
+        name: order.created
+        partitions: 1
+        replication-factor: 1
+      status-changed:
+        name: order.status.changed
+        partitions: 1
+        replication-factor: 1
