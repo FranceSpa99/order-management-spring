@@ -21,6 +21,8 @@ import com.example.demo.repository.ProductRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.AccessDeniedException;
@@ -87,6 +89,7 @@ public class OrderService {
     }
 
     @Transactional(readOnly = true)
+    @Cacheable(value = "orders", key = "#id")
     public OrderResponse getOrder(UUID id) {
         log.debug("Fetching order id={}", id);
         Order order = orderRepository.findWithItemsById(id)
@@ -103,6 +106,7 @@ public class OrderService {
     }
 
     @Transactional
+    @CacheEvict(value = "orders", key = "#id")
     public OrderResponse updateOrderStatus(UUID id, UpdateOrderStatusRequest request) {
         log.info("Updating order id={} to status={}", id, request.status());
 
@@ -139,6 +143,7 @@ public class OrderService {
     }
 
     @Transactional
+    @CacheEvict(value = "orders", key = "#id")
     public void cancelOrder(UUID id) {
         log.info("Cancelling order id={}", id);
         Order order = orderRepository.findWithItemsById(id)

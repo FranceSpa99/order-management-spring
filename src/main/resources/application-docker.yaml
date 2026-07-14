@@ -1,6 +1,12 @@
 spring:
+  data:
+    redis:
+      host: redis
+      port: 6379
+  cache:
+    type: redis
   datasource:
-    url: jdbc:postgresql://localhost:5432/orderdb
+    url: jdbc:postgresql://postgres:5432/orderdb
     password: ${DB_PASSWORD:postgres}
     username: ${DB_USERNAME:postgres}
   flyway:
@@ -12,10 +18,10 @@ spring:
     oauth2:
       resourceserver:
         jwt:
-          issuer-uri: http://localhost:8080/realms/order-management
-          jwk-set-uri: http://localhost:8080/realms/order-management/protocol/openid-connect/certs
+          issuer-uri: http://keycloak:8080/realms/order-management
+          jwk-set-uri: http://keycloak:8080/realms/order-management/protocol/openid-connect/certs
   kafka:
-    bootstrap-servers: localhost:9092
+    bootstrap-servers: kafka:9092
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
