@@ -1,17 +1,13 @@
 spring:
   datasource:
-    url: jdbc:h2:mem:orderdb;DB_CLOSE_DELAY=-1
-    username: sa
-    password:
+    url: jdbc:postgresql://localhost:5432/orderdb
+    username: postgres
+    password: postgres
   jpa:
     hibernate:
-      ddl-auto: create-drop
-    database-platform: org.hibernate.dialect.H2Dialect
+      ddl-auto: validate
   flyway:
-    enabled: false
-  h2:
-    console:
-      enabled: true
+    enabled: true
   security:
     oauth2:
       resourceserver:
