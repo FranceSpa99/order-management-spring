@@ -13,6 +13,8 @@ import com.example.demo.event.OrderCreatedEvent;
 import com.example.demo.event.OrderEventPublisher;
 import com.example.demo.event.OrderItemEvent;
 import com.example.demo.event.OrderStatusChangedEvent;
+import com.example.demo.metrics.OrderMetrics;
+import io.micrometer.core.instrument.Timer;
 import com.example.demo.exception.InsufficientStockException;
 import com.example.demo.exception.InvalidStateTransitionException;
 import com.example.demo.exception.OrderNotFoundException;
@@ -44,10 +46,12 @@ public class OrderService {
     private final OrderRepository orderRepository;
     private final ProductRepository productRepository;
     private final OrderEventPublisher orderEventPublisher;
+    private final OrderMetrics orderMetrics;
 
     @Transactional
     public OrderResponse createOrder(CreateOrderRequest request, UUID customerId) {
         log.info("Creating order for customerId={}", customerId);
+        Timer.Sample sample = orderMetrics.startTimer();
 
         Order order = new Order();
         order.setCustomerId(customerId);
@@ -83,6 +87,9 @@ public class OrderService {
         Order saved = orderRepository.save(order);
 
         publishOrderCreatedEventOnKafka(saved);
+
+        orderMetrics.recordOrderCreated();
+        orderMetrics.stopTimer(sample);
 
         log.info("Order created id={} customerId={} total={}", saved.getId(), saved.getCustomerId(), saved.getTotalAmount());
         return toResponse(saved);

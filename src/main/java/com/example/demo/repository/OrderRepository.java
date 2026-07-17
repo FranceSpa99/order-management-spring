@@ -20,6 +20,8 @@ public interface OrderRepository extends JpaRepository<Order, UUID> {
 
     List<Order> findByStatus(OrderStatus status);
 
+    long countByStatus(OrderStatus status);
+
     @Query("SELECT o FROM Order o WHERE o.status = :status AND o.createdAt BETWEEN :from AND :to")
     Page<Order> findByStatusAndDateRange(
             @Param("status") OrderStatus status,
